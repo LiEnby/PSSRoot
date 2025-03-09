@@ -2,7 +2,6 @@
 
 One-Click-Root app based on CVE-2016-5195 or "DirtyCOW";
 
-
 this should work with the PlayStation Certified devices, 
 but it may come in handy for other old android devices too;
 
@@ -13,6 +12,7 @@ Xperia S
 Sony Tablet P
 
 you may need the adb drivers for your device, in the case of sony's one its 
+
 https://developer.sony.com/open-source/aosp-on-xperia-open-devices/downloads/drivers
 
 CVE-2016-5195 lets you overwrite any file that you have read access too, regardless of if it has write permission;
