@@ -19,7 +19,7 @@ CVE-2016-5195 lets you overwrite any file that you have read access too, regardl
 we use this to temporarily overwrite /system/bin/run-as which always runs as root, to then install su
 for this reason its recommended to not close the application and ensure a good connection to ADB;
 
-[LiveOverflow did a video on this particular vulnerability](https://youtube.com/watch?v=Lj2YRCXCBv8)
+[LiveOverflow did a video on this particular vulnerability](https://www.youtube.com/watch?v=kEsshExn7aE)
 
 reason this can't be its own standalone app is that /system/bin/run-as is the only SUID binary present in older android versions;
 and it's only readable and executable from the 'shell' user, not within apps; meaning you have to trigger it from ADB Shell.
