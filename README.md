@@ -24,4 +24,4 @@ for this reason its recommended to not close the application and ensure a good c
 reason this can't be its own standalone app is that /system/bin/run-as is the only SUID binary present in older android versions;
 and it's only readable and executable from the 'shell' user, not within apps; meaning you have to trigger it from ADB Shell.
 
-
+NOTE: Exploit relies on a race condition; please give it a few minutes to run
