@@ -85,7 +85,7 @@ namespace PSSRoot
             shell.Start();
 
             readUntilBashPrompt();
-            NotifyShellChanged();
+            UpdatePs1String();
         }
         private void killRunningAdb()
         {
@@ -197,11 +197,11 @@ namespace PSSRoot
             return s;
         }
 
-        public void NotifyShellChanged()
+        public void UpdatePs1String()
         {
-            SendShellCmd("");
-            Ps1AfterProcessing = SendShellCmd("");
-            Log.Debug("Shell ps1: \"" + Ps1AfterProcessing + "\" ...");
+            SendShellCmd(String.Empty);
+            Ps1AfterProcessing = SendShellCmd(String.Empty);
+            Log.Debug("shell ps1: \"" + Ps1AfterProcessing + "\" ...");
         }
 
         public string SendShellCmd(string command)
@@ -211,6 +211,10 @@ namespace PSSRoot
 
             int pos = res.IndexOf('\n') + 1;
             if (pos != -1 && res.Length >= pos) res = res.Substring(pos);
+
+            // on android 4.1 apparenty the PS1 changes to include exit code of last process,
+            // which is annoying, guess ill just read it every single time
+            if (!String.IsNullOrEmpty(command)) UpdatePs1String();
 
             return res;
         }

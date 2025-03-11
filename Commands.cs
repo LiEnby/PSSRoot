@@ -49,7 +49,7 @@
         public int GetCurrentUid()
         {
             int uid = int.Parse(adb.ExtractOutputOnly(BusyboxCmd("id -u")));
-            Log.Command("Current user id: " + uid.ToString() + " ...");
+            Log.Command("Got user id: " + uid.ToString() + " ...");
 
             return uid;
         }
@@ -57,7 +57,7 @@
         public string BusyboxCmd(string cmd)
         {
             string res = adb.SendShellCmd(Constants.ANDROID_BUSYBOX + " " + cmd);
-            Log.Debug("run busybox cmd: " + cmd + " output: " + adb.ExtractOutputOnly(res));
+            Log.Debug("Run busybox cmd: " + cmd + " output: " + adb.ExtractOutputOnly(res));
             return res;
         }
 
@@ -123,17 +123,17 @@
             do
             {
                 string res = adb.SendShellCmd("exit");
-                adb.NotifyShellChanged();
+                adb.UpdatePs1String();
             }
             while (GetCurrentUid() == 0);
 
-            adb.NotifyShellChanged();
+            adb.UpdatePs1String();
         }
         public bool EnterRootEnvironment(string binary)
         {
             Log.Command("Attemping to get a root shell via " + binary + " ...");
             string res = adb.SendShellCmd(binary);
-            adb.NotifyShellChanged();
+            adb.UpdatePs1String();
 
             int uid = GetCurrentUid();
             if (uid != 0)
