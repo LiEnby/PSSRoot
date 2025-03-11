@@ -7,7 +7,23 @@
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <Title>PSSRoot</Title>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <NeutralLanguage>en-001</NeutralLanguage>
+    <Description>One Click Root tool for PlayStation Certified devices.</Description>
+    <PackageProjectUrl>https://silica.codes/Li/PSSRoot</PackageProjectUrl>
+    <Authors>Li</Authors>
+    <Copyright>psmreborn.com</Copyright>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

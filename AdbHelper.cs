@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace PSSRoot
 {
     public class AdbHelper : IDisposable
     {
-        private string? ADB_EXE = null;
-        private string? ADB_WIN_API = null;
-        private string? ADB_WIN_USB_API = null;
+        private string? AdbExe = null;
+        private string? AdbWinApi = null;
+        private string? AdbUsbApi = null;
 
-        private string? emptyShellLine = null;
+        private string? Ps1AfterProcessing = null;
         Process shell = new Process();
 
         public AdbHelper()
         {
+            Log.Task("Setting up ADB ...");
             extractAdb();
             startShell();
         }
@@ -40,18 +36,18 @@ namespace PSSRoot
             s = s.Trim();
 
             if (shell.HasExited && shell.ExitCode != 0) s = shell.StandardError.ReadToEnd();
-            if (s.Contains("no devices/emulators found")) throw new Exception("[*] ADB: no device connected");
-            if (shell.HasExited && shell.ExitCode != 0) throw new Exception("[*] ADB: exited with error code " + shell.ExitCode);
+            if (s.Contains("no devices/emulators found")) throw new Exception("ADB: no device connected");
+            if (shell.HasExited && shell.ExitCode != 0) throw new Exception("ADB: exited with error code " + shell.ExitCode);
 
             return s;
         }
         private void startShell()
         {
-            if (ADB_EXE is null) throw new NullReferenceException("ADB: ADB_EXE is null");
-            Console.WriteLine("[*] Starting adb shell session ...");
+            if (AdbExe is null) throw new NullReferenceException("ADB: ADB_EXE is null");
+            Log.Task("Starting adb shell session ...");
 
-            shell.StartInfo.FileName = ADB_EXE;
-            shell.StartInfo.WorkingDirectory = Path.GetDirectoryName(ADB_EXE);
+            shell.StartInfo.FileName = AdbExe;
+            shell.StartInfo.WorkingDirectory = Path.GetDirectoryName(AdbExe);
             shell.StartInfo.Arguments = "shell";
             shell.StartInfo.RedirectStandardInput = true;
             shell.StartInfo.RedirectStandardOutput = true;
@@ -63,32 +59,33 @@ namespace PSSRoot
         }
         private void killRunningAdb()
         {
-            Console.WriteLine("[*] Quitting previous adb instances ...");
+            Log.Command("Exiting any running adb instances ...");
 
-            if (ADB_EXE is not null) adbCmd("kill-server");
+            if (AdbExe is not null) adbCmd("kill-server");
             foreach (Process p in Process.GetProcessesByName("adb")) { p.Kill(); p.WaitForExit(); };
             
         }
         private void extractAdb()
         {
-            Console.WriteLine("[*] Extracting adb ...");
             killRunningAdb();
 
-            string TMP_FOLDER = Path.Combine(Path.GetTempPath(), "pssroot");
+            if (Directory.Exists(Constants.PSS_ROOT_TMP_FOLDER)) Directory.Delete(Constants.PSS_ROOT_TMP_FOLDER, true);
+            Directory.CreateDirectory(Constants.PSS_ROOT_TMP_FOLDER);
 
-            if (Directory.Exists(TMP_FOLDER)) Directory.Delete(TMP_FOLDER, true);
-            Directory.CreateDirectory(TMP_FOLDER);
+            this.AdbExe = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "adb.exe");
+            this.AdbWinApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinApi.dll");
+            this.AdbUsbApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinUsbApi.dll");
 
-
-            ADB_EXE = Path.Combine(Path.GetTempPath(), "pssroot", "adb.exe");
-            ADB_WIN_API = Path.Combine(Path.GetTempPath(), "pssroot", "AdbWinApi.dll");
-            ADB_WIN_USB_API = Path.Combine(Path.GetTempPath(), "pssroot", "AdbWinUsbApi.dll");
-
-            if(!File.Exists(ADB_EXE))
+            if(!File.Exists(this.AdbExe))
             {
-                File.WriteAllBytes(ADB_EXE, RootResources.adb);
-                File.WriteAllBytes(ADB_WIN_API, RootResources.AdbWinApi);
-                File.WriteAllBytes(ADB_WIN_USB_API, RootResources.AdbWinUsbApi);
+                Log.Command("Extracting " + Path.GetFileName(AdbExe) + " ...");
+                File.WriteAllBytes(this.AdbExe, RootResources.adb);
+
+                Log.Command("Extracting " + Path.GetFileName(AdbWinApi) + " ...");
+                File.WriteAllBytes(this.AdbWinApi, RootResources.AdbWinApi);
+
+                Log.Command("Extracting " + Path.GetFileName(AdbUsbApi) + " ...");
+                File.WriteAllBytes(this.AdbUsbApi, RootResources.AdbWinUsbApi);
             }
 
             return;
@@ -96,13 +93,14 @@ namespace PSSRoot
 
         private string adbCmd(string command)
         {
-            if (ADB_EXE is null) throw new NullReferenceException("[*] ADB: ADB_EXE is null");
+            if (AdbExe is null) throw new NullReferenceException("ADB: ADB_EXE is null");
+
 
             string s = "";
             using (Process adb = new Process())
             {
-                adb.StartInfo.FileName = ADB_EXE;
-                adb.StartInfo.WorkingDirectory = Path.GetDirectoryName(ADB_EXE);
+                adb.StartInfo.FileName = AdbExe;
+                adb.StartInfo.WorkingDirectory = Path.GetDirectoryName(AdbExe);
                 adb.StartInfo.Arguments = command;
                 adb.StartInfo.RedirectStandardOutput = true;
                 adb.StartInfo.RedirectStandardError = true;
@@ -112,18 +110,20 @@ namespace PSSRoot
                 s += adb.StandardOutput.ReadToEnd();
                 s += adb.StandardError.ReadToEnd();
 
-                if (s.Contains("no devices/emulators found")) throw new Exception("[*] ADB: no device connected");
-                if (adb.ExitCode != 0) throw new Exception("[*] ADB: exited with error code " + adb.ExitCode);
+                if (s.Contains("no devices/emulators found")) throw new Exception("ADB: no device connected");
+                if (adb.ExitCode != 0) throw new Exception("ADB: exited with error code " + adb.ExitCode);
 
             }
+
+            Log.Debug("adbCmd: " + command + " out: " + s);
             return s;
         }
 
         public void NotifyShellChanged()
         {
             SendShellCmd("");
-            emptyShellLine = SendShellCmd("");
-            Console.WriteLine("[*] Shell header: \"" + emptyShellLine + "\"");
+            Ps1AfterProcessing = SendShellCmd("");
+            Log.Debug("Shell ps1: \"" + Ps1AfterProcessing + "\" ...");
         }
 
         public string SendShellCmd(string command)
@@ -139,20 +139,24 @@ namespace PSSRoot
         public void Push(string srcFile, string dstFile)
         {
             adbCmd("push \"" + srcFile + "\" \"" + dstFile + "\"");
-            adbCmd("shell chmod 777 \"" + dstFile + "\"");
         }
 
         public void Pull(string srcFile, string dstFile)
         {
-            adbCmd("push \"" + srcFile + "\" \"" + dstFile + "\"");
+            adbCmd("pull \"" + srcFile + "\" \"" + dstFile + "\"");
         }
 
+        public string ExtractOutputOnly(string txt)
+        {
+            if (Ps1AfterProcessing is null) return txt;
+            return txt.Replace(Ps1AfterProcessing.Replace('$', '#'), String.Empty).Replace(Ps1AfterProcessing.Replace('#', '$'), String.Empty).ReplaceLineEndings("");
+        }
         public bool MatchesEmptyOutput(string txt)
         {
-            if (emptyShellLine is null) return false;
+            if (Ps1AfterProcessing is null) return false;
 
-            bool matchesNoRoot = txt.Equals(emptyShellLine.Replace('#', '$'), StringComparison.InvariantCultureIgnoreCase);
-            bool matchesRoot = txt.Equals(emptyShellLine.Replace('$', '#'), StringComparison.InvariantCultureIgnoreCase);
+            bool matchesNoRoot = txt.Equals(Ps1AfterProcessing.Replace('#', '$'), StringComparison.InvariantCultureIgnoreCase);
+            bool matchesRoot = txt.Equals(Ps1AfterProcessing.Replace('$', '#'), StringComparison.InvariantCultureIgnoreCase);
             return (matchesNoRoot || matchesRoot);
         }
 
@@ -166,11 +170,43 @@ namespace PSSRoot
             return adbCmd("install -r \"" + Apk + "\"");
         }
 
+        public void UploadExecutable(byte[] data, string filename)
+        {
+
+            Log.Command("Uploading executable " + filename + " ...");
+
+            string resTmpPath = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "resource.bin");
+            File.WriteAllBytes(resTmpPath, data);
+
+            Push(resTmpPath, filename);
+            Shell("chmod " + Constants.ANDROID_MODE_EXECUTABLE.ToString() + " \"" + filename + "\"");
+
+            File.Delete(resTmpPath);
+
+        }
+
+        public void InstallApk(byte[] data)
+        {
+
+            string resTmpPath = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "resource.apk");
+            File.WriteAllBytes(resTmpPath, data);
+            this.Install(resTmpPath);
+            File.Delete(resTmpPath);
+
+        }
+
         public void Dispose()
         {
+            Log.Task("Cleaning up ADB ...");
+
+            Log.Command("Exiting adb shell");
             shell.Kill();
             shell.Dispose();
+
             killRunningAdb();
+
+            Log.Command("Cleaning up pssroot temporary folder");
+            if (Directory.Exists(Constants.PSS_ROOT_TMP_FOLDER)) Directory.Delete(Constants.PSS_ROOT_TMP_FOLDER, true);
         }
     }
 }
