@@ -1,13 +1,10 @@
 ﻿namespace PSSRoot
 {
-    internal class Program
+    public class Program
     {
-        private static AdbHelper? adb = null;
-        private static Commands? cmd = null;
 
-        static void uploadExploitFiles()
+        static void uploadExploitFiles(AdbHelper adb)
         {
-            if (adb is null) return;
             Log.Task("Uploading required files ...");
 
             adb.UploadExecutable(RootResources.exploit, Constants.ANDROID_EXPLOIT);
@@ -16,11 +13,10 @@
 
         }
 
-        static void installTemporyRootBackdoor()
+        static void installTempoaryRootBackdoor(CmdHelper cmd)
         {
-            if (adb is null || cmd is null) return;
             
-            Log.Task("Creating temporary root backdoor @ " + Constants.ANDROID_ROOT_BACKDOOR + " ...");
+            Log.Task("Creating temporary root backdoor ...");
 
             cmd.CopyFile(Constants.ANDROID_PAYLOAD, Constants.ANDROID_ROOT_BACKDOOR);
             cmd.RootChown(Constants.ANDROID_ROOT_BACKDOOR, Constants.ANDROID_UID_ROOT, Constants.ANDROID_UID_ROOT);
@@ -28,9 +24,8 @@
 
         }
 
-        static void backupSuidBinary()
+        static void backupSuidBinary(CmdHelper cmd)
         {
-            if (adb is null || cmd is null) return;
 
             Log.Task("Backing up "+Constants.ANDROID_SUID_BINARY+" ...");
             if (!cmd.FileExists(Constants.ANDROID_SUID_BACKUP))
@@ -39,9 +34,8 @@
                 Log.Warn("Backup already exists...");
         }
 
-        static void runExploitToOverwriteSuidBinary()
+        static void runExploitToOverwriteSuidBinary(CmdHelper cmd)
         {
-            if (adb is null || cmd is null) return;
             bool gotRoot = false;
 
             int i = 1;
@@ -60,9 +54,8 @@
             while (!gotRoot); // retry until get root shell (sometimes what it writes is corrupted.)
         }
 
-        static void switchFromSuidToRootBackdoor()
+        static void switchFromSuidToRootBackdoor(CmdHelper cmd)
         {
-            if (cmd is null) return;
             Log.Task("Switching from " + Constants.ANDROID_SUID_BINARY + " to " + Constants.ANDROID_ROOT_BACKDOOR + " ...");
 
             // exit current root environment ...
@@ -73,18 +66,15 @@
 
         }
 
-        static void restoreOriginalSuidBinary()
+        static void restoreOriginalSuidBinary(CmdHelper cmd)
         {
-            if (cmd is null) return;
-
             Log.Task("Restoring the original " + Constants.ANDROID_SUID_BINARY + " file ...");
             cmd.RootCatOverwriteFile(Constants.ANDROID_SUID_BACKUP, Constants.ANDROID_SUID_BINARY);
         }
 
-        static void installSuBinary()
+        static void installSuBinary(AdbHelper adb, CmdHelper cmd)
         {
-            if (cmd is null || adb is null) return;
-
+            
             Log.Task("Installing SU binary ...");
 
             cmd.CopyFile(Constants.ANDROID_SU_BINARY, Constants.ANDROID_SU_INSTALL);
@@ -101,10 +91,8 @@
 
         }
 
-        static void cleanup()
-        {
-            if (adb is null || cmd is null) return;
-            
+        static void cleanup(CmdHelper cmd)
+        {            
             Log.Task("Cleaning up temporary files ...");
 
             cmd.RemoveFile(Constants.ANDROID_ROOT_BACKDOOR);
@@ -122,46 +110,44 @@
             try
             {
 
-                using (adb = new AdbHelper())
+                using (AdbHelper adb = new AdbHelper())
                 {
-                    using (cmd = new Commands(adb, RootResources.busybox))
+                    using (CmdHelper cmd = new CmdHelper(adb, RootResources.busybox))
                     {
 
                         // upload required files to device
-                        uploadExploitFiles();
+                        uploadExploitFiles(adb);
 
                         // backup suid binaries ...
-                        backupSuidBinary();
+                        backupSuidBinary(cmd);
 
                         // get root shell via overwrtiing suid binary
-                        runExploitToOverwriteSuidBinary();
+                        runExploitToOverwriteSuidBinary(cmd);
 
                         // mount /system as read-write
                         cmd.RootRemountRw(Constants.ANDROID_SYSTEM_DIR);
 
                         // install temporary root backdoor ...
-                        installTemporyRootBackdoor();
+                        installTempoaryRootBackdoor(cmd);
 
                         // switch from 'run-as' overwritten by exploit, to root backdoor ..
-                        switchFromSuidToRootBackdoor();
+                        switchFromSuidToRootBackdoor(cmd);
 
                         // cleanup: restore original suid binary... 
-                        restoreOriginalSuidBinary();
+                        restoreOriginalSuidBinary(cmd);
 
                         // install the 'su' binary file ...
-                        installSuBinary();
+                        installSuBinary(adb, cmd);
 
                         // cleanup any files related to the exploitation process.
-                        cleanup();
+                        cleanup(cmd);
 
                         // remount /system as read-only ..
                         cmd.RootRemountRo(Constants.ANDROID_SYSTEM_DIR);
                     }
-
                 }
 
-                Log.Info("Done, launch SuperSU and click the \"Normal\" option when prompted to update");
-
+                Log.Info("Done, launch SuperSU and click the \"normal\" option when prompted to update");
                 Log.Info("Press any key to exit ...");
                 Console.ReadKey();
             }

@@ -1,9 +1,9 @@
 ﻿namespace PSSRoot
 { 
-    class Commands : IDisposable
+    class CmdHelper : IDisposable
     {
         private AdbHelper adb;
-        public Commands(AdbHelper adbHelper, byte[] busyboxBinary)
+        public CmdHelper(AdbHelper adbHelper, byte[] busyboxBinary)
         {
             Log.Task("Setting up Environment ...");
 
@@ -43,7 +43,7 @@
         {
             Log.Command("Removing " + path + " ...");
             string res = BusyboxCmd("rm -f \"" + path + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("touch error: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Touch error: " + adb.ExtractOutputOnly(res));
         }
 
         public int GetCurrentUid()
@@ -65,75 +65,67 @@
         {
             Log.Command("Changing owner of " + path + " to "+userId.ToString()+":"+groupId.ToString()+" ...");
             string res = this.BusyboxCmd("chown " + userId.ToString()+":"+groupId.ToString()+" \"" + path + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("chown error: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Chown error: " + adb.ExtractOutputOnly(res));
         }
 
         public void RootChmod(string path, int mode)
         {
             Log.Command("Changing " + path + " permission to: "+mode.ToString()+" ...");
             string res = this.BusyboxCmd("chmod "+ mode.ToString() +" \"" + path + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("chmod failed: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Chmod failed: " + adb.ExtractOutputOnly(res));
         }
 
         public void RootCatOverwriteFile(string path, string dest)
         {
             Log.Command("Copying " + path + " to " + dest + " using cat ...");
             string res = this.BusyboxCmd("cat \"" + path + "\" > \"" + dest + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("error writing " + path + ": " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Error writing " + path + ": " + adb.ExtractOutputOnly(res));
         }
 
         public void CopyFile(string path, string dest)
         {
             Log.Command("Copying " + path + " to " + dest + " ...");
             string res = this.BusyboxCmd("cp -f \"" + path + "\" \"" + dest + "\"");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("error copying: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Error copying: " + adb.ExtractOutputOnly(res));
         }
         
         public void RootRemountRw(string path)
         {
             Log.Command("Remounting "+path+" as read-write ...");
             string res = BusyboxCmd("mount -o rw,remount " + path);
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("error mounting " + path + " as read-write: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("Error mounting " + path + " as read-write: " + adb.ExtractOutputOnly(res));
         }
 
         public void RootRemountRo(string path)
         {
             Log.Command("Remounting "+path+" as read-only ...");
             string res = BusyboxCmd("mount -o ro,remount " + path);
-            if (!adb.MatchesEmptyOutput(res)) Log.Warn("warn: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) Log.Warn("Warn: " + adb.ExtractOutputOnly(res));
         }
 
         public void RootSuInstall()
         {
             Log.Command("Running su install ...");
             string res = adb.SendShellCmd(Constants.ANDROID_SU_INSTALL + " --install");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("su install error: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("su install error: " + adb.ExtractOutputOnly(res));
         }
         public void RootSuDaemon()
         {
             Log.Command("Running su daemon ...");
             string res = adb.SendShellCmd(Constants.ANDROID_SU_INSTALL + " --daemon");
-            if (!adb.MatchesEmptyOutput(res)) throw new Exception("su install error: " + adb.ExtractOutputOnly(res));
+            if (!adb.MatchesJustPs1Output(res)) throw new Exception("su install error: " + adb.ExtractOutputOnly(res));
         }
         public void ExitRootEnvironment()
         {
-            if (adb is null) return;
-
             Log.Command("Exiting root shell ...");
             do
-            {
-                string res = adb.SendShellCmd("exit");
-                adb.UpdatePs1String();
-            }
+                adb.SendShellCmd("exit");
             while (GetCurrentUid() == 0);
-
-            adb.UpdatePs1String();
         }
         public bool EnterRootEnvironment(string binary)
         {
             Log.Command("Attemping to get a root shell via " + binary + " ...");
             string res = adb.SendShellCmd(binary);
-            adb.UpdatePs1String();
 
             int uid = GetCurrentUid();
             if (uid != 0)

@@ -233,7 +233,7 @@ namespace PSSRoot
             if (Ps1AfterProcessing is null) return txt;
             return txt.Replace(Ps1AfterProcessing.Replace('$', '#'), String.Empty).Replace(Ps1AfterProcessing.Replace('#', '$'), String.Empty).ReplaceLineEndings("");
         }
-        public bool MatchesEmptyOutput(string txt)
+        public bool MatchesJustPs1Output(string txt)
         {
             if (Ps1AfterProcessing is null) return false;
 
@@ -287,7 +287,7 @@ namespace PSSRoot
 
             killRunningAdb();
 
-            Log.Command("Cleaning up pssroot temporary folder");
+            Log.Command("Cleaning up pssroot temporary folder ...");
             if (Directory.Exists(Constants.PSS_ROOT_TMP_FOLDER)) Directory.Delete(Constants.PSS_ROOT_TMP_FOLDER, true);
         }
     }
