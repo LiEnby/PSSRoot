@@ -1,15 +1,38 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace PSSRoot
 {
     public class AdbHelper : IDisposable
     {
         private string? AdbExe = null;
-        private string? AdbWinApi = null;
-        private string? AdbUsbApi = null;
 
         private string? Ps1AfterProcessing = null;
+
         Process shell = new Process();
+
+        // linux only import :
+        
+        [DllImport("libc")]
+        private static extern int setenv(string name, string value, bool overwrite);
+
+        [DllImport("libc")]
+        private static extern int chmod(string path, int mode);
+
+        private string setupLibaryPath(string env)
+        {
+            string linuxLibPath = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "lib64");
+
+            string? libaryPath = Environment.GetEnvironmentVariable(env);
+            if (libaryPath is null) libaryPath = linuxLibPath;
+            else libaryPath += ";" + linuxLibPath;
+
+            Environment.SetEnvironmentVariable(env, libaryPath);
+            setenv(env, libaryPath, true);
+
+            return libaryPath;
+        }
+
 
         public AdbHelper()
         {
@@ -52,6 +75,13 @@ namespace PSSRoot
             shell.StartInfo.RedirectStandardInput = true;
             shell.StartInfo.RedirectStandardOutput = true;
             shell.StartInfo.RedirectStandardError = true;
+
+            // add LD_LIBRARY_PATH if linux or MacOS.
+            if (OperatingSystem.IsLinux())
+                shell.StartInfo.Environment.Add("LD_LIBRARY_PATH", setupLibaryPath("LD_LIBRARY_PATH"));
+            if (OperatingSystem.IsMacOS())
+                shell.StartInfo.Environment.Add("DYLD_LIBRARY_PATH", setupLibaryPath("DYLD_LIBRARY_PATH"));
+
             shell.Start();
 
             readUntilBashPrompt();
@@ -72,23 +102,63 @@ namespace PSSRoot
             if (Directory.Exists(Constants.PSS_ROOT_TMP_FOLDER)) Directory.Delete(Constants.PSS_ROOT_TMP_FOLDER, true);
             Directory.CreateDirectory(Constants.PSS_ROOT_TMP_FOLDER);
 
-            this.AdbExe = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "adb.exe");
-            this.AdbWinApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinApi.dll");
-            this.AdbUsbApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinUsbApi.dll");
-
-            if(!File.Exists(this.AdbExe))
+            if (OperatingSystem.IsWindows())
             {
-                Log.Command("Extracting " + Path.GetFileName(AdbExe) + " ...");
-                File.WriteAllBytes(this.AdbExe, RootResources.adb);
+                this.AdbExe = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "adb.exe");
+                string adbWinApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinApi.dll");
+                string adbUsbApi = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "AdbWinUsbApi.dll");
 
-                Log.Command("Extracting " + Path.GetFileName(AdbWinApi) + " ...");
-                File.WriteAllBytes(this.AdbWinApi, RootResources.AdbWinApi);
+                if (!File.Exists(this.AdbExe))
+                {
+                    Log.Command("Extracting " + Path.GetFileName(AdbExe) + " ...");
+                    File.WriteAllBytes(this.AdbExe, RootResources.adb_win);
 
-                Log.Command("Extracting " + Path.GetFileName(AdbUsbApi) + " ...");
-                File.WriteAllBytes(this.AdbUsbApi, RootResources.AdbWinUsbApi);
+                    Log.Command("Extracting " + Path.GetFileName(adbWinApi) + " ...");
+                    File.WriteAllBytes(adbWinApi, RootResources.AdbWinApi_win);
+
+                    Log.Command("Extracting " + Path.GetFileName(adbUsbApi) + " ...");
+                    File.WriteAllBytes(adbUsbApi, RootResources.AdbWinUsbApi_win);
+                }
             }
+            else if (OperatingSystem.IsLinux())
+            {
+                string linuxLibDirectory = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "lib64");
+                Directory.CreateDirectory(linuxLibDirectory);
 
-            return;
+                this.AdbExe = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "adb");
+                string cppLib = Path.Combine(linuxLibDirectory, "libc++.so");
+
+                if (!File.Exists(this.AdbExe))
+                {
+                    Log.Command("Extracting " + Path.GetFileName(AdbExe) + " ...");
+                    File.WriteAllBytes(this.AdbExe, RootResources.adb_lin);
+                    chmod(this.AdbExe, Constants.ANDROID_MODE_EXECUTABLE);
+
+                    Log.Command("Extracting " + Path.GetFileName(cppLib) + " ...");
+                    File.WriteAllBytes(cppLib, RootResources.libcxx_lin);
+                    chmod(cppLib, Constants.ANDROID_MODE_EXECUTABLE);
+                }
+            }
+            else if(OperatingSystem.IsMacOS())
+            {
+                string macLibDirectory = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "lib64");
+                Directory.CreateDirectory(macLibDirectory);
+
+                this.AdbExe = Path.Combine(Constants.PSS_ROOT_TMP_FOLDER, "adb");
+                string cppLib = Path.Combine(macLibDirectory, "libc++.dylib");
+
+
+                if (!File.Exists(this.AdbExe))
+                {
+                    Log.Command("Extracting " + Path.GetFileName(AdbExe) + " ...");
+                    File.WriteAllBytes(this.AdbExe, RootResources.adb_mac);
+                    chmod(this.AdbExe, Constants.ANDROID_MODE_EXECUTABLE);
+
+                    Log.Command("Extracting " + Path.GetFileName(cppLib) + " ...");
+                    File.WriteAllBytes(cppLib, RootResources.libcxx_mac);
+                    chmod(cppLib, Constants.ANDROID_MODE_EXECUTABLE);
+                }
+            }
         }
 
         private string adbCmd(string command)
@@ -104,6 +174,14 @@ namespace PSSRoot
                 adb.StartInfo.Arguments = command;
                 adb.StartInfo.RedirectStandardOutput = true;
                 adb.StartInfo.RedirectStandardError = true;
+
+                // add LD_LIBRARY_PATH if linux.
+                if (OperatingSystem.IsLinux())
+                    shell.StartInfo.Environment.Add("LD_LIBRARY_PATH", setupLibaryPath("LD_LIBRARY_PATH"));
+                if (OperatingSystem.IsMacOS())
+                    shell.StartInfo.Environment.Add("DYLD_LIBRARY_PATH", setupLibaryPath("DYLD_LIBRARY_PATH"));
+
+
                 adb.Start();
                 adb.WaitForExit();
 

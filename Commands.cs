@@ -5,7 +5,7 @@
         private AdbHelper adb;
         public Commands(AdbHelper adbHelper, byte[] busyboxBinary)
         {
-            Log.Task("Setup Environment ...");
+            Log.Task("Setting up Environment ...");
 
             this.adb = adbHelper;
 

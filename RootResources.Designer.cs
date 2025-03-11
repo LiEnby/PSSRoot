@@ -63,9 +63,9 @@ namespace PSSRoot {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] adb {
+        internal static byte[] adb_lin {
             get {
-                object obj = ResourceManager.GetObject("adb", resourceCulture);
+                object obj = ResourceManager.GetObject("adb_lin", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace PSSRoot {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] AdbWinApi {
+        internal static byte[] adb_mac {
             get {
-                object obj = ResourceManager.GetObject("AdbWinApi", resourceCulture);
+                object obj = ResourceManager.GetObject("adb_mac", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -83,9 +83,29 @@ namespace PSSRoot {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] AdbWinUsbApi {
+        internal static byte[] adb_win {
             get {
-                object obj = ResourceManager.GetObject("AdbWinUsbApi", resourceCulture);
+                object obj = ResourceManager.GetObject("adb_win", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] AdbWinApi_win {
+            get {
+                object obj = ResourceManager.GetObject("AdbWinApi_win", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] AdbWinUsbApi_win {
+            get {
+                object obj = ResourceManager.GetObject("AdbWinUsbApi_win", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -106,6 +126,26 @@ namespace PSSRoot {
         internal static byte[] exploit {
             get {
                 object obj = ResourceManager.GetObject("exploit", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] libcxx_lin {
+            get {
+                object obj = ResourceManager.GetObject("libcxx_lin", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] libcxx_mac {
+            get {
+                object obj = ResourceManager.GetObject("libcxx_mac", resourceCulture);
                 return ((byte[])(obj));
             }
         }
