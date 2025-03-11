@@ -1,4 +1,4 @@
-One-Click-Root program based on CVE-2016-5195 or "DirtyCOW";
+One-Click-Root program based on CVE-2016-5195 or "[DirtyCOW](https://en.wikipedia.org/wiki/Dirty_COW)";
 
 this should work with the PlayStation Certified devices, 
 but it may come in handy for other old android devices too;
