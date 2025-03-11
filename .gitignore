@@ -3,3 +3,4 @@ obj/*
 bin/*
 native_c/obj/*
 native_c/libs/*
+*.user
