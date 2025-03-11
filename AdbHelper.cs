@@ -44,7 +44,7 @@ namespace PSSRoot
         private void startShell()
         {
             if (AdbExe is null) throw new NullReferenceException("ADB: ADB_EXE is null");
-            Log.Task("Starting adb shell session ...");
+            Log.Command("Starting adb shell session ...");
 
             shell.StartInfo.FileName = AdbExe;
             shell.StartInfo.WorkingDirectory = Path.GetDirectoryName(AdbExe);
