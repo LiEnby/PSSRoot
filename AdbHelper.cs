@@ -11,7 +11,7 @@ namespace PSSRoot
 
         Process shell = new Process();
 
-        // linux only import :
+        // linux/macos import :
         
         [DllImport("libc")]
         private static extern int setenv(string name, string value, bool overwrite);

@@ -1,4 +1,6 @@
-﻿namespace PSSRoot
+﻿using System.IO.Compression;
+
+namespace PSSRoot
 {
     public class Program
     {
@@ -10,7 +12,6 @@
             adb.UploadExecutable(RootResources.exploit, Constants.ANDROID_EXPLOIT);
             adb.UploadExecutable(RootResources.payload, Constants.ANDROID_PAYLOAD);
             adb.UploadExecutable(RootResources.su, Constants.ANDROID_SU_BINARY);
-
         }
 
         static void installTempoaryRootBackdoor(CmdHelper cmd)
