@@ -16,6 +16,7 @@
     <Authors>Li</Authors>
     <Copyright>psmreborn.com</Copyright>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Company>psmreborn.com</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
