@@ -109,16 +109,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-      <None Include="Resources\AdbLinux.resx" Condition="'$(Configuration)'!='Linux'" />
-      <None Include="Resources\AdbMac.resx" Condition="'$(Configuration)'!='MacOS'" />
-      <None Include="Resources\AdbWin.resx" Condition="'$(Configuration)'!='Windows'" />
-
-	  <None Include="Resources\AdbLinux.Designer.cs" Condition="'$(Configuration)'!='Linux'" />
-	  <None Include="Resources\AdbMac.Designer.cs" Condition="'$(Configuration)'!='MacOS'" />
-	  <None Include="Resources\AdbWin.Designer.cs" Condition="'$(Configuration)'!='Windows'" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Resources\RootResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
