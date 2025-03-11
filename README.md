@@ -25,3 +25,5 @@ reason this can't be its own standalone app is that /system/bin/run-as is the on
 and it's only readable and executable from the 'shell' user, not within apps; meaning you have to trigger it from ADB Shell.
 
 NOTE: Exploit relies on a race condition; please give it a few minutes to run
+
+![PSS Root Success Output](https://silica.codes/Li/PSSRoot/raw/branch/main/PSSRootExploit.png)
