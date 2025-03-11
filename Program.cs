@@ -44,16 +44,18 @@
             if (adb is null || cmd is null) return;
             bool gotRoot = false;
 
-            int i = 0;
+            int i = 1;
             do
             {
-                Log.Task("Attempt exploit #" + i.ToString() + " (this may take a bit) ...");
+                Log.Task("Run exploit attempt #" + i.ToString() + " (this may take a bit) ...");
 
                 // DirtyCow or CVE-2016-5195 allows you to overwrite any file, so we overwrite a suid binary.
                 cmd.RunExploit(Constants.ANDROID_PAYLOAD, Constants.ANDROID_SUID_BINARY);
 
                 // Attempt to run the suid binary and see if we got root.
                 gotRoot = cmd.EnterRootEnvironment(Constants.ANDROID_SUID_BINARY);
+
+                i++;
             }
             while (!gotRoot); // retry until get root shell (sometimes what it writes is corrupted.)
         }
