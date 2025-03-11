@@ -17,50 +17,120 @@
     <Copyright>psmreborn.com</Copyright>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Company>psmreborn.com</Company>
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Platforms>x64;x86</Platforms>
+    <Configurations>Debug;Windows;Linux;MacOS</Configurations>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+	
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>embedded</DebugType>
+    <DefineConstants>OS_DEBUG</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='Windows'">
     <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+  <PropertyGroup Condition="'$(Configuration)'=='MacOS'">
     <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <DefineConstants>OS_MACOS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Linux'">
     <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <DefineConstants>OS_LINUX</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
+  <PropertyGroup Condition="'$(Platform)'=='x86'">
+	<PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>none</DebugType>
+	
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+	<PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="icon.ico" />
   </ItemGroup>
 
+	<ItemGroup Condition="'$(Configuration)'=='Linux' Or '$(Configuration)'=='Debug'">
+		<Compile Update="Resources\AdbLinux.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AdbLinux.resx</DependentUpon>
+		</Compile>
+		<EmbeddedResource Include="Resources\AdbLinux.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>AdbLinux.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(Configuration)'=='MacOS' Or '$(Configuration)'=='Debug'">
+		<Compile Update="Resources\AdbMac.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AdbMac.resx</DependentUpon>
+        </Compile>
+		<EmbeddedResource Include="Resources\AdbMac.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>AdbMac.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Windows' Or '$(Configuration)'=='Debug'">
+		<Compile Update="Resources\AdbWin.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AdbWin.resx</DependentUpon>
+		</Compile>
+		<EmbeddedResource Include="Resources\AdbWin.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>AdbWin.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+	
+	
+	<ItemGroup>
+		<Compile Update="Resources\RootResources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>RootResources.resx</DependentUpon>
+		</Compile>
+		<EmbeddedResource Include="Resources\RootResources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>RootResources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
   <ItemGroup>
-    <Compile Update="RootResources.Designer.cs">
+      <None Include="Resources\AdbLinux.resx" Condition="'$(Configuration)'!='Linux'" />
+      <None Include="Resources\AdbMac.resx" Condition="'$(Configuration)'!='MacOS'" />
+      <None Include="Resources\AdbWin.resx" Condition="'$(Configuration)'!='Windows'" />
+
+	  <None Include="Resources\AdbLinux.Designer.cs" Condition="'$(Configuration)'!='Linux'" />
+	  <None Include="Resources\AdbMac.Designer.cs" Condition="'$(Configuration)'!='MacOS'" />
+	  <None Include="Resources\AdbWin.Designer.cs" Condition="'$(Configuration)'!='Windows'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\RootResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>RootResources.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-
+	
   <ItemGroup>
-    <EmbeddedResource Update="RootResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>RootResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -118,40 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="busybox" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\android\busybox;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="adb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>linux\adb;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="exploit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\android\exploit;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="payload" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\android\payload;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="supersu" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\android\ssu.apk;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="su" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\android\su;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="adb_win" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\windows\adb.exe;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="AdbWinApi_win" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\windows\AdbWinApi.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="AdbWinUsbApi_win" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\windows\AdbWinUsbApi.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="adb_lin" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\linux\adb;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="libcxx_lin" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\linux\libc++.so;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="adb_mac" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\mac\adb;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="libcxx_mac" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\mac\libc++.dylib;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="libcxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>linux\libc++.so;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

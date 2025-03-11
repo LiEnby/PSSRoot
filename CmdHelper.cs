@@ -1,4 +1,6 @@
-﻿namespace PSSRoot
+﻿using PSSRoot.Resources;
+
+namespace PSSRoot
 { 
     class CmdHelper : IDisposable
     {
