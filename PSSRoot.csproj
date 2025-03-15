@@ -17,7 +17,7 @@
     <Copyright>psmreborn.com</Copyright>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Company>psmreborn.com</Company>
-    <Platforms>x64;x86</Platforms>
+    <Platforms>x64;x86;AnyCPU</Platforms>
     <Configurations>Debug;Windows;Linux;MacOS</Configurations>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
@@ -53,6 +53,10 @@
 	
   <PropertyGroup Condition="'$(Platform)'=='x64'">
 	<PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Platform)'=='AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
