@@ -21,6 +21,7 @@
     <Configurations>Debug;Windows;Linux;MacOS</Configurations>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <AssemblyName>$(MSBuildProjectName)-$(Configuration)-$(Platform)</AssemblyName>
   </PropertyGroup>
 	
 
