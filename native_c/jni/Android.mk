@@ -7,8 +7,8 @@ LOCAL_SRC_FILES := \
 	dcow.c
 
 LOCAL_MODULE := exploit
-LOCAL_LDFLAGS   += -llog
-LOCAL_CFLAGS    += -DDEBUG
+LOCAL_LDFLAGS   += -llog --strip-all --gc-sections
+LOCAL_CFLAGS    += -O3
 
 include $(BUILD_EXECUTABLE)
 
@@ -18,9 +18,7 @@ LOCAL_SRC_FILES := \
 	run-as.c
 
 LOCAL_CFLAGS += -Os -Wall -nostartfiles -nostdlib -fno-ident -fno-builtin \
-		-fno-exceptions -fno-asynchronous-unwind-tables -fno-data-sections \
-		-fomit-frame-pointer -fno-common -fno-fast-math -fno-inline-functions \
-		-fshort-enums -fno-stack-protector -fno-strict-aliasing
+		-fno-exceptions -fno-stack-protector
 LOCAL_LDFLAGS += -nostdlib --gc-sections --strip-all
 
 include $(BUILD_EXECUTABLE)
