@@ -5,8 +5,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishAot>True</PublishAot>
+    <InvariantGlobalization>True</InvariantGlobalization>
     <Title>PSSRoot</Title>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>1.2.0.0</FileVersion>
@@ -22,6 +22,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <AssemblyName>$(MSBuildProjectName)-$(Configuration)-$(Platform)</AssemblyName>
+    <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
 	
 
@@ -33,19 +34,22 @@
   <PropertyGroup Condition="'$(Configuration)'=='Windows'">
     <DebugType>none</DebugType>
     <Optimize>True</Optimize>
+    <StripSymbols>True</StripSymbols>
     <DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='MacOS'">
-    <DebugType>none</DebugType>
-    <Optimize>True</Optimize>
-    <DefineConstants>OS_MACOS</DefineConstants>
+	  <DebugType>none</DebugType>
+	  <Optimize>True</Optimize>
+	  <StripSymbols>True</StripSymbols>
+	  <DefineConstants>OS_MACOS</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Linux'">
-    <DebugType>none</DebugType>
-    <Optimize>True</Optimize>
-    <DefineConstants>OS_LINUX</DefineConstants>
+	  <DebugType>none</DebugType>
+	  <Optimize>True</Optimize>
+	  <StripSymbols>True</StripSymbols>
+	  <DefineConstants>OS_LINUX</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)'=='x86'">
