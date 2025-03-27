@@ -1,5 +1,6 @@
 ﻿using PSSRoot.Resources;
 using System.IO.Compression;
+using System.Reflection;
 
 namespace PSSRoot
 {
@@ -104,9 +105,22 @@ namespace PSSRoot
             cmd.RemoveFile(Constants.ANDROID_SUID_BACKUP);
 
         }
+
+        static string getProgramVersion()
+        {
+            Assembly? assembly = Assembly.GetEntryAssembly();
+            if (assembly is not null)
+            {
+                Version? ver = assembly.GetName().Version;
+                if (ver is not null) return "v" + ver.Major + "." + ver.Minor;
+            }
+
+            return "v1.2";
+        }
         static void Main(string[] args)
         {
-            Log.Info("PSSRoot v1.1 by LiEnby ...");
+
+            Log.Info("PSSRoot "+ getProgramVersion() +" by LiEnby ...");
             Log.Info("Root exploit for PlayStation Certified Devices!");
 
             try
