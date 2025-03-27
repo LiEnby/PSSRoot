@@ -17,8 +17,8 @@ LOCAL_MODULE := payload
 LOCAL_SRC_FILES := \
 	run-as.c
 
-LOCAL_CFLAGS += -Os -ffreestanding -fno-exceptions -fno-ident -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables
-LOCAL_LDFLAGS += -nostartfiles -nostdlib --gc-sections --strip-all -fno-exceptions
+LOCAL_CFLAGS += -Os -fno-ident
+LOCAL_LDFLAGS += -nostartfiles -nostdlib --gc-sections --strip-all -fno-exceptions -fno-asynchronous-unwind-tables
 
 include $(BUILD_EXECUTABLE)
 
